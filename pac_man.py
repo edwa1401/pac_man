@@ -72,21 +72,30 @@ def set_vector() -> str:
     return vector
 
 
-def change_vector(vector: str) -> str:
+def change_vector(enemy, enemy_vectors) -> str:
     vectors = ['up', 'down', 'left', 'right']
+    vector = enemy_vectors[enemy]
     vectors.remove(vector)
     vector = random.choice(vectors)
     return vector
 
 
-def enemy_movement(enemy_speed: int, vector: str, context: dict, enemy: str) -> None:
-    if vector == "down":
+def create_enemies_vectors(enemies: list) -> dict:
+    enemy_vectors = {}
+    for enemy in enemies:
+        vector = set_vector()
+        enemy_vectors[enemy] = vector
+    return enemy_vectors
+
+
+def enemy_movement(enemy_speed: int, enemy: str, enemy_vectors: dict, context: dict) -> None:
+    if enemy_vectors[enemy] == "down":
         context[enemy].rect = context[enemy].rect.move(0, enemy_speed)
-    if vector == "left":
+    if enemy_vectors[enemy] == "left":
         context[enemy].rect = context[enemy].rect.move(-1*enemy_speed, 0)
-    if vector == "right":
+    if enemy_vectors[enemy] == "right":
         context[enemy].rect = context[enemy].rect.move(enemy_speed, 0)
-    if vector == "up":
+    if enemy_vectors[enemy] == "up":
         context[enemy].rect = context[enemy].rect.move(0, -1*enemy_speed)
 
 
@@ -110,7 +119,7 @@ def main() -> None:
 
     context = compose_context(screen)
 
-    vector = set_vector()
+    enemy_vectors = create_enemies_vectors(enemies)
 
     while running:
         for event in pygame.event.get():
@@ -119,7 +128,7 @@ def main() -> None:
 
         if enemy_speed > player_speed:
             enemy_speed = player_speed
-        
+
         draw_whole_screen(screen, context)
 
         pygame.display.flip()
@@ -131,10 +140,10 @@ def main() -> None:
 
         for enemy in enemies:
             old_enemy_topleft = context[enemy].rect.topleft
-            enemy_movement(enemy_speed, vector, context, enemy)
+            enemy_movement(enemy_speed, enemy, enemy_vectors, context)
             if spritecollide(context[enemy], context["walls"], dokill=False):
                 context[enemy].rect.topleft = old_enemy_topleft
-                vector = change_vector(vector)
+                enemy_vectors[enemy] = change_vector(enemy, enemy_vectors)
                 enemy_speed += 0.1
             check_game_over(context, screen, enemy)
 
